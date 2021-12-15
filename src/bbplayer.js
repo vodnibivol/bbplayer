@@ -7,11 +7,9 @@ const El = (function () {
     let el = _ELEMENTS[selector];
 
     if (!el || !el.parentNode) {
-      console.log('fetching element');
       el = document.querySelector(selector);
       _ELEMENTS[selector] = el;
     } else {
-      console.log('cache element');
     }
 
     return el;
@@ -19,16 +17,6 @@ const El = (function () {
 
   return { get };
 })();
-
-// const Counter = (function () {
-//   let _state = 0;
-
-//   function next() {
-//     return ++_state;
-//   }
-
-//   return { next };
-// })();
 
 class BB {
   // default properties
