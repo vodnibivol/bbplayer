@@ -1,0 +1,121 @@
+// sass src/bbplayer.scss dist/bbplayer.css --style=compressed --no-source-map
+
+// --- BASIC STYLING
+
+// INFO: ':not(:fullscreen)' used for video element
+
+.bb-hidden {
+  display: none;
+}
+
+.bb-dimmed {
+  filter: brightness(0.5); // :not(:fullscreen)
+}
+
+.bb-no-pointer {
+  pointer-events: none;
+}
+
+video.bb-no-controls {
+  &::-webkit-media-controls {
+    display: none;
+  }
+}
+
+// reset values set above
+video:fullscreen {
+  &.bb-dimmed {
+    filter: none;
+  }
+
+  &.bb-no-pointer {
+    pointer-events: all;
+  }
+
+  &.bb-no-controls {
+    &::-webkit-media-controls {
+      display: revert;
+    }
+  }
+}
+
+// -- ELEMENTS
+
+div#bb-container {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  background: black;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+video#bb-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+}
+
+img#bb-loading-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+  padding: 2% 0;
+
+  background: black; // before the image itself loads TODO: preveri, ce je potrebno
+
+  object-fit: cover;
+  pointer-events: none;
+}
+
+span#bb-loading-text {
+  padding: 5px;
+
+  background: black;
+  color: white;
+
+  transform: translateY(2px); // mora bit tako. senca daje iluzijo necentriranosti
+  border-radius: 2px;
+
+  pointer-events: none;
+}
+
+div#bb-play-btn-container {
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  pointer-events: none;
+}
+
+svg#bb-play-btn {
+  width: 60px;
+  cursor: pointer;
+
+  pointer-events: all; // 'pointer events' is inherited
+
+  &:hover {
+    filter: brightness(0.9);
+  }
+
+  &:active {
+    filter: brightness(0.8);
+  }
+}
