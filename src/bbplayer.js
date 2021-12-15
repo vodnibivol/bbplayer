@@ -1,3 +1,7 @@
+/**
+ * bbplayer.js -- made by vodnibivol
+ */
+
 const El = (function () {
   // vars
   const _ELEMENTS = {};
@@ -32,7 +36,7 @@ class BB {
 
   _STATES = {
     INITIAL: [
-      { selector: this._SELECTORS.BBVideo, classList: ['bb-hidden', 'bb-no-pointer'] },
+      { selector: this._SELECTORS.BBVideo, classList: ['bb-hidden', 'bb-no-pointer'] }, // TODO: delete bb-no-pointer?
       { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
       { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
       { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
@@ -66,7 +70,7 @@ class BB {
       // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
     ],
     ERROR: [
-      { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer'] },
+      { selector: this._SELECTORS.BBVideo, classList: ['bb-hidden', 'bb-no-pointer'] }, // TODO: delete bb-no-pointer?
       { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
       { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
       { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
@@ -104,6 +108,12 @@ class BB {
   // --- API
 
   load(videoUrl) {
+    // TODO: premakni kam drugam?
+    if (typeof Hls === 'undefined') {
+      this._renderState(this._STATES.ERROR);
+      return;
+    }
+
     this._renderState(this._STATES.LOADING);
 
     if (this.DEBUG) console.log('video loading : ' + videoUrl);

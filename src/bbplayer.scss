@@ -1,12 +1,8 @@
-// sass src/bbplayer.scss dist/bbplayer.css --style=compressed --no-source-map
-
-// --- BASIC STYLING
-
-// INFO: ':not(:fullscreen)' used for video element
-
 div[id^='bbplayer_'] {
   width: 100%;
   height: 100%;
+
+  // --- BASIC STYLING
 
   .bb-hidden {
     display: none;
