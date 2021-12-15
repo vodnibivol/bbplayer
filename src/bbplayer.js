@@ -1,185 +1,198 @@
+const El = (function () {
+  // vars
+  const _ELEMENTS = {};
+
+  // f(x)
+  function get(selector) {
+    let el = _ELEMENTS[selector];
+
+    if (!el || !el.parentNode) {
+      console.log('fetching element');
+      el = document.querySelector(selector);
+      _ELEMENTS[selector] = el;
+    } else {
+      console.log('cache element');
+    }
+
+    return el;
+  }
+
+  return { get };
+})();
+
+// const Counter = (function () {
+//   let _state = 0;
+
+//   function next() {
+//     return ++_state;
+//   }
+
+//   return { next };
+// })();
+
 class BB {
-  #PLAY_BTN;
-  #GIF_1;
-  #GIF_2;
+  // default properties
+  _SELECTORS = {
+    BBContainer: '.bb-container',
+    BBVideo: '.bb-video',
+    BBLoadingImg: '.bb-loading-img',
+    BBLoadingText: '.bb-loading-text',
+    BBPlayBtnContainer: '.bb-play-btn-container',
+    BBPlayBtn: '.bb-play-btn',
+    BBErrBtn: '.bb-err-btn',
+  };
+
+  _STATES = {
+    INITIAL: [
+      { selector: this._SELECTORS.BBVideo, classList: ['bb-hidden', 'bb-no-pointer'] },
+      { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
+      // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
+    ],
+    LOADING: [
+      { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer'] },
+      { selector: this._SELECTORS.BBLoadingImg, classList: [] },
+      { selector: this._SELECTORS.BBLoadingText, classList: [] },
+      { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
+      // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
+    ],
+    READY: [
+      { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer'] },
+      { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-dimmed'] },
+      { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBPlayBtn, classList: [] },
+      // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
+    ],
+    PLAYING: [
+      { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
+      // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
+    ],
+    PAUSED: [
+      { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer', 'bb-dimmed', 'bb-no-controls'] },
+      { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBPlayBtn, classList: [] },
+      // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
+    ],
+    ERROR: [
+      { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer'] },
+      { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
+      { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
+      // { selector: this._SELECTORS.BBErrBtn, classList: [] },
+    ],
+  };
+
+  // prettier-ignore
+  _PLAY_BTN_HTML = '<svg class="bb-play-btn" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><path fill="#fff" d="M0 0h50v50H0z"/><path d="m43.301 25-21.65 12.5L0 50V0l21.65 12.5z"/></svg>';
+  // GIF_SRC = 'https://media.giphy.com/media/1lALzcU4pUHWWMGTlK/giphy.gif';
+  GIF_SRC = 'https://i.pinimg.com/originals/fe/ae/ea/feaeea33c22a7a7195e430a9bfe538c5.gif';
 
   constructor(selector, properties = null) {
-    // prettier-ignore
-    this.#PLAY_BTN = '<svg id="bb-play-btn" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><path fill="#fff" d="M0 0h50v50H0z"/><path d="m43.301 25-21.65 12.5L0 50V0l21.65 12.5z"/></svg>';
-    this.#GIF_1 = 'https://media.giphy.com/media/1lALzcU4pUHWWMGTlK/giphy.gif';
-    this.#GIF_2 = 'https://i.pinimg.com/originals/fe/ae/ea/feaeea33c22a7a7195e430a9bfe538c5.gif';
-
-    properties = properties || {};
+    this._ID = randomId('bbplayer_', 10 ** 6);
 
     // provided properties
-    this._DEBUG = properties.debug || false;
+    properties = properties || {};
 
-    this._WRAPPER_SELECTOR = selector;
-    this._AUTOPLAY = properties.autoplay || false;
-    this._CONTROLS = properties.controls || false;
-    this._LOADING_IMG_SRC = properties.loadingImgSrc || this.#GIF_2;
-    this._LOADING_TEXT = properties.loadingText || 'loading ..'; // TODO
+    this.DEBUG = properties.debug || false;
 
-    // default properties
-    this._SELECTORS = {
-      BBContainer: '#bb-container',
-      BBVideo: '#bb-video',
-      BBLoadingImg: '#bb-loading-img',
-      BBLoadingText: '#bb-loading-text',
-      BBPlayBtnContainer: '#bb-play-btn-container',
-      BBPlayBtn: '#bb-play-btn',
-      BBErrBtn: '#bb-err-btn',
-    };
+    this.WRAPPER_SELECTOR = selector;
+    this.AUTOPLAY = properties.autoplay || false;
+    this.CONTROLS = properties.controls || false;
+    this.LOADING_IMG_SRC = properties.loadingImgSrc || this.GIF_SRC;
+    this.LOADING_TEXT = properties.loadingText || 'loading ..';
 
-    this._currentState = null;
+    this._currentState = null; // state of element classes
 
-    // this.loadSources();
     this.create();
-    this.setup();
-    this.renderState(this.STATES.INITIAL);
+    this._renderState(this._STATES.INITIAL);
 
     this.bindEvents();
   }
 
-  loadSources() {
-    // TODO: load Hls.js here instead of manual html tag
-    // this.loadScript('https://cdn.jsdelivr.net/npm/hls.js@latest', callback);
-  }
-
-  setup() {
-    this.STATES = {
-      INITIAL: [
-        { selector: this._SELECTORS.BBVideo, classList: ['bb-hidden', 'bb-no-pointer'] },
-        { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
-        // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
-      ],
-      LOADING: [
-        { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer'] },
-        { selector: this._SELECTORS.BBLoadingImg, classList: [] },
-        { selector: this._SELECTORS.BBLoadingText, classList: [] },
-        { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
-        // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
-      ],
-      READY: [
-        { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer'] },
-        { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-dimmed'] },
-        { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBPlayBtn, classList: [] },
-        // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
-      ],
-      PLAYING: [
-        { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
-        // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
-      ],
-      PAUSED: [
-        { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer', 'bb-dimmed', 'bb-no-controls'] },
-        { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBPlayBtn, classList: [] },
-        // { selector: this._SELECTORS.BBErrBtn, classList: ['bb-hidden'] },
-      ],
-      ERROR: [
-        { selector: this._SELECTORS.BBVideo, classList: ['bb-no-pointer'] },
-        { selector: this._SELECTORS.BBLoadingImg, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBLoadingText, classList: ['bb-hidden'] },
-        { selector: this._SELECTORS.BBPlayBtn, classList: ['bb-hidden'] },
-        // { selector: this._SELECTORS.BBErrBtn, classList: [] },
-      ],
-    };
-  }
-
-  loadScript(url, callback) {
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = url;
-
-    script.onload = callback;
-
-    // fire the loading
-    document.head.appendChild(script);
-  }
-
-  forceLoadingAnim() {
-    this.renderState(this.STATES.LOADING);
-  }
+  // --- API
 
   load(videoUrl) {
-    this.renderState(this.STATES.LOADING);
+    this._renderState(this._STATES.LOADING);
 
-    if (this._DEBUG) console.log('video loading : ' + videoUrl);
+    if (this.DEBUG) console.log('video loading : ' + videoUrl);
 
     if (Hls.isSupported()) {
       const hls = new Hls();
       hls.loadSource(videoUrl);
-      hls.attachMedia(this.DOMEl(this._SELECTORS.BBVideo));
-    } else if (this.DOMEl(this._SELECTORS.BBVideo).canPlayType('application/vnd.apple.mpegurl')) {
-      this.DOMEl(this._SELECTORS.BBVideo).src = videoUrl;
+      hls.attachMedia(El.get(this._SELECTORS.BBVideo));
+    } else if (El.get(this._SELECTORS.BBVideo).canPlayType('application/vnd.apple.mpegurl')) {
+      El.get(this._SELECTORS.BBVideo).src = videoUrl;
     }
 
+    // rebind events TODO: what for ?
     this.bindEvents();
   }
 
   play() {
-    this.renderState(this.STATES.PLAYING);
-    this.DOMEl(this._SELECTORS.BBVideo).play();
+    this._renderState(this._STATES.PLAYING);
+    El.get(this._SELECTORS.BBVideo).play();
   }
 
   pause() {
-    this.renderState(this.STATES.PAUSED);
-    this.DOMEl(this._SELECTORS.BBVideo).pause();
+    this._renderState(this._STATES.PAUSED);
+    El.get(this._SELECTORS.BBVideo).pause();
   }
 
-  renderState(newState) {
+  setVolume(volume) {
+    El.get(this._SELECTORS.BBVideo).volume = volume;
+  }
+
+  setLoadingImg(src) {
+    this.LOADING_IMG_SRC = src;
+    El.get(this._SELECTORS.BBLoadingImg).src = src;
+  }
+
+  forceLoadingAnim() {
+    this._renderState(this._STATES.LOADING);
+  }
+
+  _renderState(newState) {
     // unload current state
     if (this._currentState) {
       for (let i of this._currentState) {
-        let el = this.DOMEl(i.selector);
+        let el = El.get(i.selector);
         el.classList.remove(...i.classList);
       }
     }
 
     // load new state
     for (let i of newState) {
-      let el = this.DOMEl(i.selector);
+      let el = El.get(i.selector);
       el.classList.add(...i.classList);
     }
 
     this._currentState = newState;
   }
 
-  DOMEl(selector) {
-    return document.querySelector(selector);
-  }
-
-  setVolume(volume) {
-    this.DOMEl(this._SELECTORS.BBVideo).volume = volume;
-  }
-
-  setLoadingImg(src) {
-    this._LOADING_IMG_SRC = src;
-    this.DOMEl(this._SELECTORS.BBLoadingImg).src = src;
-  }
+  // --- INIT
 
   create() {
     const playerHTML = `\
-    <div id="bb-container">
-      <video id="bb-video" ${this._CONTROLS ? 'controls' : ''} ${this._AUTOPLAY ? 'autoplay' : ''}></video>
-      <img id="bb-loading-img" src="${this._LOADING_IMG_SRC}">
-      <span id="bb-loading-text">${this._LOADING_TEXT}</span>
-      <div id="bb-play-btn-container">
-        ${this.#PLAY_BTN}
+    <div id="${this._ID}">
+      <div class="bb-container">
+        <video class="bb-video" ${this.CONTROLS ? 'controls' : ''} ${this.AUTOPLAY ? 'autoplay' : ''}></video>
+        <img class="bb-loading-img" src="${this.LOADING_IMG_SRC}">
+        <span class="bb-loading-text">${this.LOADING_TEXT}</span>
+        <div class="bb-play-btn-container">
+          ${this._PLAY_BTN_HTML}
+        </div>
       </div>
-    </div>
-    `;
+    </div>`;
+
     // main container
-    this.DOMEl(this._WRAPPER_SELECTOR).insertAdjacentHTML('beforeend', playerHTML);
+    El.get(this.WRAPPER_SELECTOR).insertAdjacentHTML('beforeend', playerHTML);
 
     // move loading text
-    this.DOMEl(this._SELECTORS.BBLoadingText).style.transform = randomTranslate();
+    El.get(this._SELECTORS.BBLoadingText).style.transform = randomTranslate();
   }
 
   bindEvents() {
@@ -187,11 +200,11 @@ class BB {
 
     // video data loaded
     listenerName = 'listenerLoadedData';
-    el = this.DOMEl(this._SELECTORS.BBVideo);
+    el = El.get(this._SELECTORS.BBVideo);
     if (!(listenerName in el.dataset)) {
       el.addEventListener('loadeddata', () => {
-        if (this._DEBUG) console.log('video loaded');
-        this.renderState(this.STATES.READY);
+        if (this.DEBUG) console.log('video loaded');
+        this._renderState(this._STATES.READY);
       });
 
       el.dataset[listenerName] = '';
@@ -199,12 +212,12 @@ class BB {
 
     // pause fired
     listenerName = 'listenerPauseFired';
-    el = this.DOMEl(this._SELECTORS.BBVideo);
+    el = El.get(this._SELECTORS.BBVideo);
     if (!(listenerName in el.dataset)) {
       el.addEventListener('pause', (e) => {
-        if (this.DOMEl(this._SELECTORS.BBVideo).readyState === 4) {
+        if (El.get(this._SELECTORS.BBVideo).readyState === 4) {
           e.preventDefault();
-          if (this._DEBUG) console.log('video paused');
+          if (this.DEBUG) console.log('video paused');
           this.pause();
         }
       });
@@ -214,11 +227,11 @@ class BB {
 
     // play fired
     listenerName = 'listenerPlayFired';
-    el = this.DOMEl(this._SELECTORS.BBVideo);
+    el = El.get(this._SELECTORS.BBVideo);
     if (!(listenerName in el.dataset)) {
       el.addEventListener('play', (e) => {
         e.preventDefault();
-        if (this._DEBUG) console.log('video playing');
+        if (this.DEBUG) console.log('video playing');
         this.play();
       });
 
@@ -227,7 +240,7 @@ class BB {
 
     // BB play button clicked
     listenerName = 'listenerPlayBtnClicked';
-    el = this.DOMEl(this._SELECTORS.BBPlayBtn);
+    el = El.get(this._SELECTORS.BBPlayBtn);
     if (!(listenerName in el.dataset)) {
       el.addEventListener('click', () => {
         this.play();
@@ -239,6 +252,17 @@ class BB {
 }
 
 // --- HELPER FUNCTIONS
+
+function randomId(prefix = '') {
+  while (true) {
+    let randId = prefix + randomHex(10 ** 6);
+    if (!El.get(randId)) return randId;
+  }
+}
+
+function randomHex(size = 1000) {
+  return randomNum(size).toString(16);
+}
 
 function randomTranslate() {
   // |   MAX----MIN  X  MIN----MAX   |
@@ -253,6 +277,11 @@ function randomTranslate() {
 }
 
 function randomNum(min, max) {
+  if (max === undefined) {
+    max = min;
+    min = 0;
+  }
+
   return min + Math.floor(Math.random() * (max - min));
 }
 
