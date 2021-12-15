@@ -112,7 +112,8 @@ svg#bb-play-btn {
   pointer-events: all; // 'pointer events' is inherited
 
   &:hover {
-    filter: brightness(0.9);
+    // filter: brightness(0.9);
+    filter: invert(1);
   }
 
   &:active {
